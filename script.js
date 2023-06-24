@@ -8,5 +8,4 @@ const medusa = new Medusa();
 game.updateables.push(medusa);
 game.renderables.push(medusa);
 
-game.start();
-
+game.start(30);
