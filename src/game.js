@@ -1,13 +1,26 @@
 class Game {
 
-    constructor(canvas, width, height) {
+    constructor(canvas, width, height, input) {
         canvas.width = width;
         canvas.height = height;
         this.ctx = canvas.getContext('2d');
-        this.renderables = [];
-        this.updateables = [];
         this.then = null;
         this.fpsInterval = null;
+        this.states = {};
+        this.currentState = null;
+        this.input = input;
+    }
+
+    addState(key, state) {
+        this.states[key] = state;
+    }
+
+    transitionStateTo(stateKey) {
+        if (this.currentState) {
+            this.currentState.exit(this);
+        }
+        this.currentState = this.states[stateKey];
+        this.currentState.enter(this);
     }
 
     start(fps) {
@@ -25,13 +38,17 @@ class Game {
         
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        for (const updateable of this.updateables) {
-            updateable.update();
+        if (this.currentState) {
+            this.currentState.execute(this);
+        } else {
+            throw new Error('No game state is set.');
         }
 
-        for (const renderable of this.renderables) {
-            renderable.render(this.ctx);
-        }
+        // This is called after all other updates, because it actually
+        // removes keys that were released. Calling it last makes sure 
+        // every keystroke gets recognized and handled. 
+        // Maybe a better alternative could be a queue / event system.
+        this.input.update();
     }
 
     shouldUpdate() {
